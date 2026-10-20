@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Plumbline.Cli</RootNamespace>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>plumbline</ToolCommandName>
+    <PackageId>Plumbline.Cli</PackageId>
+    <Description>Command-line runner for Plumbline LLM regression suites.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Plumbline.Core\Plumbline.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Plumbline.Cli/Plumbline.Cli.csproj" />
+    <Project Path="src/Plumbline.Core/Plumbline.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Plumbline.Tests/Plumbline.Tests.csproj" />
+  </Folder>
+</Solution>

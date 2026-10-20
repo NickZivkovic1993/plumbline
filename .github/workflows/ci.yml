@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Check formatting
+        run: dotnet format Plumbline.slnx --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Test
+        run: dotnet test --no-build -c Release --logger trx --results-directory test-results
+
+      - name: Pack the CLI as a dotnet tool
+        run: dotnet pack src/Plumbline.Cli -c Release --no-build -o packages
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results
+
+  evals:
+    # Dogfooding: run the example suite through this repo's own GitHub Action.
+    name: Example evals (replayed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the support-bot suite
+        uses: ./
+        with:
+          suite: examples/support-bot/suite.yaml
+          replay: examples/support-bot/cassette.json
+          baseline: examples/support-bot/baseline.json
+          fail-on: regressions
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plumbline-results
+          path: |
+            plumbline-results.json
+            plumbline-junit.xml

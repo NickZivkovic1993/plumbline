@@ -1,0 +1,81 @@
+name: Plumbline LLM evals
+description: Run a Plumbline suite against your LLM feature and fail the job when answers regress.
+author: Nick Zivkovic
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  suite:
+    description: Path to the suite YAML file.
+    required: true
+  replay:
+    description: Cassette to replay instead of calling a live model (no network, no API keys).
+    required: false
+    default: ""
+  baseline:
+    description: Results file from a previous run to compare against.
+    required: false
+    default: ""
+  fail-on:
+    description: "'any' fails on any failing case; 'regressions' only on cases that passed in the baseline (needs baseline)."
+    required: false
+    default: any
+  out:
+    description: Where to write the full JSON results.
+    required: false
+    default: plumbline-results.json
+  junit:
+    description: Where to write the JUnit XML report.
+    required: false
+    default: plumbline-junit.xml
+  args:
+    description: Extra arguments passed to 'plumbline run' (e.g. "--model gpt-4.1-mini --parallel 8").
+    required: false
+    default: ""
+  dotnet-version:
+    description: .NET SDK used to build Plumbline.
+    required: false
+    default: 10.0.x
+
+outputs:
+  results:
+    description: Path to the JSON results file.
+    value: ${{ inputs.out }}
+  junit:
+    description: Path to the JUnit XML report.
+    value: ${{ inputs.junit }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Build Plumbline
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        OUT_DIR: ${{ runner.temp }}/plumbline
+      run: dotnet build "$ACTION_PATH/src/Plumbline.Cli/Plumbline.Cli.csproj" -c Release -nologo -v q -o "$OUT_DIR"
+
+    - name: Run suite
+      shell: bash
+      env:
+        PLUMBLINE: ${{ runner.temp }}/plumbline/Plumbline.Cli.dll
+        SUITE: ${{ inputs.suite }}
+        REPLAY: ${{ inputs.replay }}
+        BASELINE: ${{ inputs.baseline }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        OUT: ${{ inputs.out }}
+        JUNIT: ${{ inputs.junit }}
+        EXTRA_ARGS: ${{ inputs.args }}
+      run: |
+        args=(run "$SUITE" --fail-on "$FAIL_ON" --out "$OUT" --junit "$JUNIT")
+        if [ -n "$REPLAY" ]; then args+=(--replay "$REPLAY"); fi
+        if [ -n "$BASELINE" ]; then args+=(--baseline "$BASELINE"); fi
+        # Extra args are split on whitespace on purpose; quote-free flags only.
+        read -r -a extra <<< "$EXTRA_ARGS"
+        dotnet "$PLUMBLINE" "${args[@]}" "${extra[@]}"

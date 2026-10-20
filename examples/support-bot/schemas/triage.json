@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Support ticket triage",
+  "type": "object",
+  "required": ["category", "urgency", "needsHuman", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "category": { "enum": ["refund", "shipping", "product", "account", "other"] },
+    "urgency": { "enum": ["low", "normal", "high"] },
+    "needsHuman": { "type": "boolean" },
+    "summary": { "type": "string", "minLength": 5, "maxLength": 300 }
+  }
+}
