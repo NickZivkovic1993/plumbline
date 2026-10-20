@@ -172,7 +172,7 @@ but took about 2.8x as long on my machine (223s vs 80s). That's the trade-off th
 ## GitHub Action
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v7
 - uses: NickZivkovic1993/plumbline@main
   with:
     suite: evals/suite.yaml
@@ -231,7 +231,7 @@ Version 0.1: small and deliberately boring. Known gaps, roughly in the order I'd
 - no streaming; latency is measured end to end
 - judge scores are only as good as the judge model. Calibrate a judge criterion against a few answers
   you have graded by hand before trusting it
-- the GitHub Action builds from source on each run (~30s)
+- the GitHub Action builds Plumbline from source on each run (about 11s on a GitHub-hosted runner)
 
 ## License
 
